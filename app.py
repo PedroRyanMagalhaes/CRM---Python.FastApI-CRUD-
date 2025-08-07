@@ -87,21 +87,43 @@ def read_cliente_by_id(cliente_id: int, session: Session = Depends(get_session))
         raise HTTPException(status_code=404, detail="Cliente não encontrado")
     return cliente
 '''
-como se tivesse o espaço em branco que é equivalente o cliente_id nessa estrutura toda  
-
+ como se tivesse o espaço em branco que é equivalente o cliente_id nessa estrutura toda  
  ai vem o numero passa na url fast api vai buscar la com url pronta /clientes/5/
-
-ai a gente falo pra ele cliente id é um numero inteiro ele pega e coloca o numero que ele coloco na url nesse espaço ai pois é o mesmo nome da variavel
-
+ ai a gente falo pra ele cliente id é um numero inteiro ele pega e coloca o numero que ele coloco na url nesse espaço ai pois é o mesmo nome da variavel
  criamos a session com banco de dados ate ai temos ja entao o numero na url o numero no espaço cliente_id e conexao com banco aberta  
-
  ai vamo la e criamos a variavel cliente que vai usar a sessao do banco "get" que é uma funçao ja pre pronta que pega coluna com chave primeira e fala 
-
-esse cliente é oque vc achar em coluna Clientes com a chave primeira 5  (cupondo que o numero passado la em cima era 5)
-
+ esse cliente é oque vc achar em coluna Clientes com a chave primeira 5  (cupondo que o numero passado la em cima era 5)
  ai ele vai  e pega  
-
  e no caso ele vai trazer toda a info da linha 5 da coluna clientes nesse caso
+'''
+
+@app.put("/clientes/{cliente_id}", response_model=ClienteRead, tags={"Clientes"})
+def update_cliente(cliente_id: int, cliente_dados:ClienteCreate, session: Session = Depends(get_session)):
+    '''Atualiza um cliente existente pelo ID'''
+    db_cliente = session.get(Cliente, cliente_id)
+    if not db_cliente:
+        raise HTTPException(status_code=404, detail="Cliente não encontrado")
+    
+    update_dados = cliente_dados.model_dump(exclude_unset=True)
+
+    for key, value in update_dados.items():
+        setattr(db_cliente, key, value)
+
+    session.add(db_cliente)
+    session.commit()
+    session.refresh(db_cliente)
+    return db_cliente
+'''
+Eu tinha um objetio criado com idade e nome que eu mandei no get la no banco
+pedro 35
+ai eu crieo uma nova variavel update_dados que o dicinario das novas informaçoes
+ai eu falei for key,value in update_dados.item
+vai iterando chave e valor no meu dicionario que agora meu diconaro esta com duplas por conta da funçao item entao agroa meu diconario esta
+nome pedro
+idade 40
+que sao os dados qu eo user colocou
+ai o setattr vem e fala pega o objetio que temos que o db cliente pedro 35 e passa key e value entao passa nome pedro e idade 40
+e ai chama a sesioon da um add e da um commmit e da um refrech pra atualixar tudo
 '''
 
 
