@@ -79,4 +79,30 @@ def read_clientes(session: Session = Depends(get_session)):
     clientes = session.exec(select(Cliente)).all()
     return clientes
 
+@app.get("/clientes/{cliente_id}", response_model=ClienteRead, tags=["Clientes"])
+def read_cliente_by_id(cliente_id: int, session: Session = Depends(get_session)):
+    '''Retornar um cliente específico pelo ID'''
+    cliente = session.get(Cliente, cliente_id)
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente não encontrado")
+    return cliente
+'''
+como se tivesse o espaço em branco que é equivalente o cliente_id nessa estrutura toda  
+
+ ai vem o numero passa na url fast api vai buscar la com url pronta /clientes/5/
+
+ai a gente falo pra ele cliente id é um numero inteiro ele pega e coloca o numero que ele coloco na url nesse espaço ai pois é o mesmo nome da variavel
+
+ criamos a session com banco de dados ate ai temos ja entao o numero na url o numero no espaço cliente_id e conexao com banco aberta  
+
+ ai vamo la e criamos a variavel cliente que vai usar a sessao do banco "get" que é uma funçao ja pre pronta que pega coluna com chave primeira e fala 
+
+esse cliente é oque vc achar em coluna Clientes com a chave primeira 5  (cupondo que o numero passado la em cima era 5)
+
+ ai ele vai  e pega  
+
+ e no caso ele vai trazer toda a info da linha 5 da coluna clientes nesse caso
+'''
+
+
 
