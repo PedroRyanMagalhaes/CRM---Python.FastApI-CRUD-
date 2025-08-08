@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
-from sqlmodel import Field, SQLModel, create_engine, Session, select
+from sqlmodel import Field, or_, SQLModel, create_engine, Session, select
 from typing import Optional, List
 from contextlib import asynccontextmanager
 
@@ -82,12 +82,24 @@ def create_cliente(cliente: ClienteCreate, session: Session = Depends(get_sessio
     return db_cliente
 
 
-
 @app.get("/clientes/", response_model=List[ClienteRead], tags=["Clientes"])
-def read_clientes(session: Session = Depends(get_session)):
-    #session: Session siginfica apenas que to criando um objeto chamado session que é no memso molde de Session importado do sqlmodel
-    '''Retornar a lista de todos os clientes cadastrados'''
-    clientes = session.exec(select(Cliente)).all()
+def read_clientes(session: Session = Depends(get_session), 
+                  termo : Optional[str] = None):
+    '''Retornar todos os clientes ou filtrar por termo'''
+
+    query = select(Cliente)
+
+    if termo: 
+        expressao_de_busca = f"%{termo}%"
+        query = query.where(
+            or_(
+            Cliente.nome.ilike(expressao_de_busca),
+            Cliente.email.ilike(expressao_de_busca),
+            Cliente.telefone.ilike(expressao_de_busca)
+            )
+        )
+
+    clientes = session.exec(query).all()
     return clientes
 
 @app.get("/clientes/{cliente_id}", response_model=ClienteRead, tags=["Clientes"])
@@ -97,6 +109,8 @@ def read_cliente_by_id(cliente_id: int, session: Session = Depends(get_session))
     if not cliente:
         raise HTTPException(status_code=404, detail="Cliente não encontrado")
     return cliente
+
+
 '''
  como se tivesse o espaço em branco que é equivalente o cliente_id nessa estrutura toda  
  ai vem o numero passa na url fast api vai buscar la com url pronta /clientes/5/
@@ -148,6 +162,8 @@ def detele_cliente(cliente_id: int, session: Session = Depends(get_session)):
     session.delete(cliente_para_apagar)
     session.commit()
     return{"detalhe": "Cliente deletado com sucesso"}
+
+
 
 
 
