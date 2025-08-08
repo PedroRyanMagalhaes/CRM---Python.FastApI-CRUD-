@@ -23,6 +23,11 @@ class ClienteCreate(ClienteBase):
 class ClienteRead(ClienteBase):
     id: int
 
+class ClienteUpdate(SQLModel):
+    nome: Optional[str] = None
+    email: Optional[str] = None
+    telefone: Optional[str] = None
+
 DATABASE_FILE = "database.db"
 engine = create_engine(f"sqlite:///{DATABASE_FILE}", echo=True)
 
@@ -104,7 +109,7 @@ def read_cliente_by_id(cliente_id: int, session: Session = Depends(get_session))
 '''
 
 @app.put("/clientes/{cliente_id}", response_model=ClienteRead, tags={"Clientes"})
-def update_cliente(cliente_id: int, cliente_dados:ClienteCreate, session: Session = Depends(get_session)):
+def update_cliente(cliente_id: int, cliente_dados:ClienteUpdate, session: Session = Depends(get_session)):
     '''Atualiza um cliente existente pelo ID'''
     db_cliente = session.get(Cliente, cliente_id)
     if not db_cliente:
@@ -113,7 +118,8 @@ def update_cliente(cliente_id: int, cliente_dados:ClienteCreate, session: Sessio
     update_dados = cliente_dados.model_dump(exclude_unset=True)
 
     for key, value in update_dados.items():
-        setattr(db_cliente, key, value)
+        if value:
+            setattr(db_cliente, key, value)
 
     session.add(db_cliente)
     session.commit()
@@ -132,7 +138,7 @@ ai o setattr vem e fala pega o objetio que temos que o db cliente pedro 35 e pas
 e ai chama a sesioon da um add e da um commmit e da um refrech pra atualixar tudo
 '''
 
-@app.delete ("/cliente/{cliente_id}", tags=["Clientes"])
+@app.delete ("/clientes/{cliente_id}", tags=["Clientes"])
 def detele_cliente(cliente_id: int, session: Session = Depends(get_session)):
     ''' deleta um cliente pelo ID'''
     cliente_para_apagar= session.get(Cliente, cliente_id)
