@@ -30,6 +30,15 @@ def create_db_and_tables():
     print("Executando SQLModel.metadata.create_all(engine)...")
     SQLModel.metadata.create_all(engine)
 
+
+@asynccontextmanager
+async def lifespan(app:FastAPI):
+    print ("API ESTA LIGANDO, CRIANDO TABELAS...")
+    create_db_and_tables()
+    print ("API ESTA LIGADA")
+    yield
+    print("API desligando...")
+
 '''
 O símbolo @ em Python é usado para algo especial chamado Decorador (Decorator).
 
@@ -43,21 +52,18 @@ app.on_event(...) sem o @ seria uma chamada de função normal.
 Então, o @ não chama a função, ele conecta a função on_startup ao evento startup do objeto app. É o "adesivo" que liga as duas coisas.
 '''
 
-@asynccontextmanager
-async def lifespan(app:FastAPI):
-    print ("API ESTA LIGANDO, CRIANDO TABELAS...")
-    create_db_and_tables()
-    print ("API ESTA LIGADA")
-    yield
-    print("API desligando...")
-
 def get_session():
     "Função para obter uma sessão do banco de dados"
     with Session(engine) as session:
         yield session
 
-app = FastAPI(lifespan=lifespan)
-
+app = FastAPI(
+    lifespan=lifespan,
+    title="API CRM Loja de Roupas",
+    description="API para gerenciar clientes de uma loja de roupas.",
+    version="1.0.0",
+)
+   
 '''Cadastrar um novo cliente'''
 @app.post("/clientes/", response_model=ClienteRead,  tags=["Clientes"])
 def create_cliente(cliente: ClienteCreate, session: Session = Depends(get_session)):
@@ -125,6 +131,20 @@ que sao os dados qu eo user colocou
 ai o setattr vem e fala pega o objetio que temos que o db cliente pedro 35 e passa key e value entao passa nome pedro e idade 40
 e ai chama a sesioon da um add e da um commmit e da um refrech pra atualixar tudo
 '''
+
+@app.delete ("/cliente/{cliente_id}", tags=["Clientes"])
+def detele_cliente(cliente_id: int, session: Session = Depends(get_session)):
+    ''' deleta um cliente pelo ID'''
+    cliente_para_apagar= session.get(Cliente, cliente_id)
+    if not cliente_para_apagar:
+        raise HTTPException(status_code=404, detail="Cliente não encontrado")
+    
+    session.delete(cliente_para_apagar)
+    session.commit()
+    return{"detalhe": "Cliente deletado com sucesso"}
+
+
+
 
 
 
